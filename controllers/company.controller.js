@@ -4,7 +4,6 @@ const Company = mongoose.model('Company');
 
 module.exports = {
     saveCompany: async (req, res, next) => {
-        // let companyData = JSON.parse(req.query.data);
         let newCompany = new Company({
             userID: req.body.userID,
             userName: req.body.userName,

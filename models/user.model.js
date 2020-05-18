@@ -24,7 +24,7 @@ let userSchema = new Schema({
         },
         password: {
             type: String,
-            minlength: [4, 'Password must be atleast 4 character long']
+            minlength: [4, 'Password must be at least 4 character long']
         },
         isAdmin: {
             type: Boolean,
@@ -49,7 +49,6 @@ let userSchema = new Schema({
         },        
         isAdmin: {
             type: Boolean,
-
         },
     },
     google: {
@@ -69,7 +68,6 @@ let userSchema = new Schema({
         },        
         isAdmin: {
             type: Boolean,
-
         },
     },
 });
