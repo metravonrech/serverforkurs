@@ -1,3 +1,5 @@
+let asyncHandler = require('../errorHandlers/asyncHandler').catchAsync;
+let AppError = require('../errorHandlers/AppError');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const _ = require('lodash');
@@ -12,7 +14,7 @@ async function foundUser(email) {
 
 
 module.exports = {
-    register: async (req, res, next) => {
+    register: asyncHandler(async (req, res, next) => {
         if (await foundUser(req.body.email)) {
             return res.status(422).send(['This email already exists']);
         }
@@ -27,18 +29,16 @@ module.exports = {
         await user.save((err, doc) => {
                 if (!err) return res.send(doc);
                 else {
-                    console.log(err);
-                    return next(err)
+                    return new AppError(`Error has appeared trying to record new rating, ${err.name}`, 500)
                 }
-                ;
             }
         );
-    },
+    }),
 
-    userProfile: async (req, res, next) => {
+    userProfile: asyncHandler(async (req, res, next) => {
         await User.findOne({_id: req._id}, (err, user) => {
                 if (!user)
-                    return res.status(404).json({status: false, message: 'User record not found.'});
+                    return new AppError(`User record not found, ${err.name}`, 404)
                 else {
                     let method = user.method;
                     let objUser = {
@@ -55,11 +55,11 @@ module.exports = {
                 }
             }
         );
-    },
+    }),
 
-    authenticate: async (req, res, next) => {
+    authenticate: asyncHandler(async (req, res, next) => {
         await passport.authenticate('local', (err, user, info) => {
-            if (err) return res.status(400).json(err);
+            if (err) return new AppError(`Request was rejected, ${err.name}`, 400);
             else if (user) return res.status(200).json({
                 "token": user.generateJwt('local'),
                 'userID': user.local.userID,
@@ -71,9 +71,9 @@ module.exports = {
             else return res.status(404).json(info);
         })(req, res)
 
-    },
+    }),
 
-    facebookOauth: async (req, res, next) => {
+    facebookOauth: asyncHandler(async (req, res, next) => {
         let facebookUser = req.user.facebook;
         User.findOne({"facebook.email": facebookUser.email}, (err, user) => {
             if (!err) return res.status(200).json({
@@ -84,9 +84,9 @@ module.exports = {
                 '_idBD': user._id
             });
         });
-    },
+    }),
 
-    googleOauth: async (req, res, next) => {
+    googleOauth: asyncHandler(async (req, res, next) => {
         let googleUser = req.user.google;
         User.findOne({'google.email': googleUser.email}, (err, user) => {
             if (!err) return res.status(200).json({
@@ -97,7 +97,7 @@ module.exports = {
                 '_idBD': user._id
             });
         });
-    }
+    })
 };
  
 

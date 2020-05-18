@@ -1,9 +1,11 @@
+let asyncHandler = require('../errorHandlers/asyncHandler').catchAsync;
+let AppError = require('../errorHandlers/AppError');
 const mongoose = require('mongoose');
 
 const Company = mongoose.model('Company');
 
 module.exports = {
-    saveCompany: async (req, res, next) => {
+    saveCompany: asyncHandler(async (req, res, next) => {
         let newCompany = new Company({
             userID: req.body.userID,
             userName: req.body.userName,
@@ -17,11 +19,11 @@ module.exports = {
             donateGoal: req.body.donateGoal,
             duration: req.body.duration,
         });
-        await newCompany.save();
+        await newCompany.save(err => new AppError(`Error has appeared trying to save company, ${err.name}`, 500));
         return res.status(200).json('success');
-    },
+    }),
 
-    getCompanies: async (req, res, next) => {
+    getCompanies: asyncHandler(async (req, res, next) => {
         let amount, page;
         !req.query.amount ? amount = 10 : amount = req.query.amount;
         !req.query.page ? page = 1 : page = req.query.page;
@@ -29,18 +31,18 @@ module.exports = {
             .skip(page * amount - amount)
             .limit(parseInt(amount))
             .then(companies => res.status(200).json(companies))
-            .catch(err => next(err));
-    },
+            .catch(err => new AppError(`Error has appeared trying to get companies, ${err.name}`, 500));
+    }),
 
-    getCompanyDetails: (req, res, next) => {
+    getCompanyDetails: asyncHandler((req, res, next) => {
         Company.findOne({projectID: req.params.projectID}, (err, company) => {
             if (!err) return res.status(200).json(company);
-            throw new Error(err);
+            return new AppError(`Error has appeared trying to get company details, ${err.name}`, 500)
         });
-    },
+    }),
 
 
-    getCompaniesByCategory: async (req, res, next) => {
+    getCompaniesByCategory: asyncHandler(async (req, res, next) => {
         let amount, page;
         let filterArr = [];
         let projectCategory = JSON.parse(req.query.projectCategory);
@@ -55,30 +57,29 @@ module.exports = {
             .then(companies => {
                 return res.status(200).json(companies)
             })
-            .catch(err => next(err));
-    },
+            .catch(err => new AppError(`Error has appeared trying to get companies by category, ${err.name}`, 500));
+    }),
 
 
-
-    getCompaniesBuUserId: async (req, res, next) => {
+    getCompaniesBuUserId: asyncHandler(async (req, res, next) => {
         Company.find({userID: req.body.userID}, (err, companies) => {
             if (!err) return res.status(200).json(companies);
-            next(new Error(err));
+            return new AppError(`Error has appeared trying to get companies by user id, ${err.name}`, 500)
         });
-    },
-    removeCompanyById: async (req, result, next) => {
+    }),
+    removeCompanyById: asyncHandler(async (req, result, next) => {
         Company.deleteOne({projectID: req.body.projectID}, (err, res) => {
             if (!err) return result.status(200).json('success');
-            next(new Error(err));
+            return new AppError(`Error has appeared trying to remove selected company, ${err.name}`, 500)
         });
-    },
-    donate: async (req, result, next) => {
+    }),
+    donate: asyncHandler(async (req, result, next) => {
         Company.findOneAndUpdate({projectID: req.body.projectID}, {currentSum: req.body.currentSum}, {useFindAndModify: false}, (err, res) => {
             if (!err) return result.status(200).json('success');
-            next(new Error(err));
+            return new AppError(`Error has appeared trying to record new donation, ${err.name}`, 500)
         });
-    },
-    updateCompany: async (req, res, next) => {
+    }),
+    updateCompany: asyncHandler(async (req, res, next) => {
         Company.findOneAndUpdate({projectID: req.body.projectID},
             {
                 name: req.body.name,
@@ -90,9 +91,9 @@ module.exports = {
                 duration: req.body.duration,
             }, {useFindAndModify: false}, (err, res) => {
                 if (!err) return result.status(200).json('success');
-                next(new Error(err));
+                return new AppError(`Error has appeared trying to update selected company, ${err.name}`, 500)
             });
-    }
+    })
 
 
 };

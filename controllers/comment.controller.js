@@ -1,9 +1,11 @@
-const mongoose = require('mongoose');
+let asyncHandler = require('../errorHandlers/asyncHandler').catchAsync;
+let AppError = require('../errorHandlers/AppError');
 
+const mongoose = require('mongoose');
 const Company = mongoose.model('Company');
 
 module.exports = {
-    saveComment: async (commentData, result, next) => {
+    saveComment: asyncHandler(async (commentData, result, next) => {
         Company.findOneAndUpdate({projectID: commentData.body.projectID},
             {
                 $push: {
@@ -18,8 +20,7 @@ module.exports = {
             {useFindAndModify: false},
             (err, res) => {
                 if (!err) return result.status(200).json('success');
+                else if(err) return new AppError(`Error has appeared trying to add new comment, ${err.name}`, 500)
             })
-    },
-
-
+    }),
 };

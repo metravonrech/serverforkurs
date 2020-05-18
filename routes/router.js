@@ -1,3 +1,5 @@
+let AppError = require('../errorHandlers/AppError');
+
 const express = require('express');
 const router = express.Router();
 const jwtHelper = require('../configuration/jwtHelper');
@@ -23,11 +25,14 @@ router.get('/getCompaniesByCategory', companyController.getCompaniesByCategory);
 router.put('/donate', companyController.donate);
 router.put('/updateCompany', companyController.updateCompany);
 
-// router.get('/getOldComments', commentController.getComments);
+
 router.put('/saveComment', commentController.saveComment);
 
 router.put('/saveRating', ratingController.saveSingleRating);
-// router.get('/getRating', ratingController.getRating);
+
+router.all('*', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
 
 
 module.exports = router;
